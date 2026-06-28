@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>WordUp - פסיכומטרי</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Poppins:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --red:#E8504A;
+  --red-dark:#c93f39;
+  --blue-dark:#1E2D4E;
+  --green:#27AE60;
+  --gray-bg:#F2F3F7;
+  --white:#ffffff;
+  --text-main:#1E2D4E;
+  --text-muted:#8896AF;
+  --border:#E2E8F0;
+}
+body{
+  font-family:'Heebo',sans-serif;
+  background:var(--gray-bg);
+  color:var(--text-main);
+  min-height:100vh;
+  direction:rtl;
+  max-width:430px;
+  margin:0 auto;
+  position:relative;
+  overflow-x:hidden;
+}
+.app{display:flex;flex-direction:column;min-height:100vh}
+.quiz-header{background:var(--red);padding:0;flex-shrink:0;}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:48px 20px 0;position:relative;}
+.close-btn{width:36px;height:36px;border:none;background:none;color:rgba(255,255,255,0.85);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background 0.15s;}
+.close-btn:hover{background:rgba(255,255,255,0.15)}
+.score-row{display:flex;align-items:flex-start;justify-content:space-between;padding:8px 16px 0;color:white;}
+.score-col{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px;}
+.score-col.center{flex:1;align-items:center}
+.score-icon{font-size:22px;opacity:0.9}
+.score-num{font-family:'Poppins',sans-serif;font-size:18px;font-weight:700;color:white;line-height:1;}
+.score-label{font-size:13px;font-weight:600;color:rgba(255,255,255,0.75);}
+.tab-indicator{height:3px;background:rgba(255,255,255,0.25);margin:10px 16px 0;border-radius:2px;position:relative;}
+.tab-indicator::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:80px;height:3px;background:white;border-radius:2px;}
+.selector-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 14px;gap:8px;}
+.selector-btn{background:rgba(255,255,255,0.18);border:none;color:white;border-radius:8px;padding:7px 12px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background 0.15s;flex:1;justify-content:center;}
+.selector-btn:hover{background:rgba(255,255,255,0.28)}
+.selector-btn .arrow{font-size:10px;opacity:0.75}
+.quiz-body{background:white;flex:1;display:flex;flex-direction:column;align-items:center;padding:32px 24px 40px;min-height:400px;}
+.word-card-wrap{width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.word-display{width:100%;background:var(--gray-bg);border-radius:20px;padding:28px 24px;text-align:center;cursor:pointer;transition:transform 0.15s;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden;}
+.word-display:active{transform:scale(0.98)}
+.word-en{font-family:'Poppins',sans-serif;font-size:32px;font-weight:800;color:var(--text-main);direction:ltr;}
+.word-he{font-size:18px;font-weight:700;color:var(--text-main);display:none;line-height:1.4;}
+.word-ex{font-size:12px;color:var(--text-muted);direction:ltr;font-style:italic;line-height:1.5;display:none;margin-top:4px;}
+.tap-hint{font-size:12px;color:var(--text-muted);margin-top:4px;}
+.word-display.revealed .word-he{display:block}
+.word-display.revealed .word-ex{display:block}
+.word-display.revealed .tap-hint{display:none}
+.action-row{display:flex;gap:12px;width:100%;margin-top:20px;}
+.action-btn{flex:1;padding:16px;border:none;border-radius:14px;font-family:'Heebo',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform 0.15s,filter 0.15s;}
+.action-btn:active{transform:scale(0.97)}
+.btn-unknown{background:#FDECEA;color:#C0392B}
+.btn-unknown:hover{filter:brightness(0.95)}
+.btn-known{background:#E8F8F0;color:#1a7a44}
+.btn-known:hover{filter:brightness(0.95)}
+.btn-icon{font-size:20px}
+.completion{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 0;width:100%;}
+.confetti-emoji{font-size:52px;animation:bounce 0.5s ease}
+@keyframes bounce{0%{transform:scale(0.7)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.comp-title{font-size:22px;font-weight:800;color:var(--text-main)}
+.comp-sub{font-size:15px;color:var(--text-muted);line-height:1.6;max-width:260px}
+.comp-btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:8px}
+.comp-btn-primary{width:100%;padding:15px;background:var(--red);color:white;border:none;border-radius:12px;font-family:'Heebo',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:filter 0.15s;}
+.comp-btn-primary:hover{filter:brightness(0.93)}
+.comp-btn-secondary{width:100%;padding:15px;background:var(--blue-dark);color:white;border:none;border-radius:12px;font-family:'Heebo',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:filter 0.15s;}
+.comp-btn-secondary:hover{filter:brightness(0.85)}
+.modal-overlay{position:fixed;inset:0;background:rgba(30,45,78,0.45);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:white;border-radius:24px 24px 0 0;width:100%;max-width:430px;padding:0 0 40px;animation:slideSheet 0.3s ease;max-height:85vh;overflow-y:auto;}
+@keyframes slideSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-header{display:flex;align-items:center;justify-content:flex-end;padding:16px 20px 0;}
+.sheet-close{width:32px;height:32px;border:none;background:var(--gray-bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;}
+.sheet-title{text-align:center;font-size:18px;font-weight:700;color:var(--text-main);padding:4px 0 20px;}
+.sheet-list{list-style:none}
+.sheet-item{padding:16px 24px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:17px;font-weight:500;color:var(--text-main);transition:background 0.1s;border-top:1px solid var(--border);direction:ltr;text-align:right;}
+.sheet-item:hover{background:var(--gray-bg)}
+.sheet-item-label{display:flex;align-items:center;gap:6px;direction:rtl;}
+.sheet-item-he{color:var(--text-main)}
+.sheet-item-en{font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;}
+.sheet-item.selected .sheet-item-en,.sheet-item.selected .sheet-item-he{color:var(--red)}
+.check-icon{color:var(--red);font-size:18px;opacity:0;}
+.sheet-item.selected .check-icon{opacity:1}
+.word-display.exit-left{animation:exitLeft 0.22s ease forwards}
+.word-display.exit-right{animation:exitRight 0.22s ease forwards}
+@keyframes exitLeft{to{opacity:0;transform:translateX(-60px)}}
+@keyframes exitRight{to{opacity:0;transform:translateX(60px)}}
+.word-display.enter{animation:enterCard 0.2s ease}
+@keyframes enterCard{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="quiz-header">
+    <div class="header-top">
+      <div style="width:36px"></div>
+      <div></div>
+      <button class="close-btn" onclick="startUnit()">✕</button>
+    </div>
+    <div class="score-row">
+      <div class="score-col">
+        <div class="score-icon">👎</div>
+        <div class="score-num" id="unknownNum">0</div>
+      </div>
+      <div class="score-col center">
+        <div class="score-label">למיון</div>
+        <div class="score-num" id="remainingNum">0</div>
+      </div>
+      <div class="score-col">
+        <div class="score-icon">👍</div>
+        <div class="score-num" id="knownNum">0</div>
+      </div>
+    </div>
+    <div class="tab-indicator"></div>
+    <div class="selector-row">
+      <button class="selector-btn" onclick="openModal('unit')" id="unitBtn">
+        <span id="unitBtnText">יחידה : Unit 1</span>
+        <span class="arrow">▾</span>
+      </button>
+      <button class="selector-btn" onclick="openModal('level')" id="levelBtn">
+        <span id="levelBtnText">רמה : קלה</span>
+        <span class="arrow">▾</span>
+      </button>
+    </div>
+  </div>
+  <div class="quiz-body" id="quizBody"></div>
+</div>
+
+<div class="modal-overlay" id="unitModal" onclick="closeModalOutside(event,'unitModal')">
+  <div class="modal-sheet">
+    <div class="sheet-header"><button class="sheet-close" onclick="closeModal('unitModal')">✕</button></div>
+    <div class="sheet-title">בחירת יחידה למיון</div>
+    <ul class="sheet-list" id="unitList"></ul>
+  </div>
+</div>
+
+<div class="modal-overlay" id="levelModal" onclick="closeModalOutside(event,'levelModal')">
+  <div class="modal-sheet">
+    <div class="sheet-header"><button class="sheet-close" onclick="closeModal('levelModal')">✕</button></div>
+    <div class="sheet-title">בחירת רמה</div>
+    <ul class="sheet-list" id="levelList"></ul>
+  </div>
+</div>
+
+<script>
+// סטטוס ידיעה: 1=יודע, 0=ככה-ככה, -1=לא יודע
+const WORD_STATUS = {
+  easy: {
+    1: {
+      "above":1,"according to":1,"accordance":1,"accordingly":1,"although":1,
+      "always":1,"approve":1,"because":1,"believe":1,"belief":1,"unbelievable":1,
+      "cause":1,"certain":1,"certainty":1,"complete":1,"completely":1,
+      "complicate":1,"complication":1,"complicated":1,"contrary":1,"contribute":1,
+      "correct":1,"cruel":1,"damage":1,"danger":1,"endanger":1,"dangerous":1,
+      "decrease":-1,"deem":-1,"despite":1,"different":1,"indifferent":1,
+      "differ":1,"difference":1,"difficult":1,"disappoint":1,"disaster":1,
+      "disastrous":-1,"entire":-1,"improve":1,"improvise":1,"just":1,
+      "justify":1,"justified":1,"justification":1,"main":1,"mainly":1,
+      "negative":1,"positive":1,"never":-1,"object":-1,"objection":1,
+      "objective":1,"offensive":1,"inoffensive":1,"offend":1,"offer":1,
+      "official":1,"unofficial":1,"often":1,"opposite":1,"opposing":1,
+      "opposition":1,"previous":1,"previously":1,"primarily":-1,"primary":1,
+      "reduce":1,"result":1,"similar":1,"stable":1,"stabilize":1,"unstable":1,
+      "weather":1,"when":1,"usual":1,"usually":1,"unusual":1
+    },
+    2: {
+      "admire":-1,"admiration":-1,"admirable":-1,"ancient":1,"best":1,
+      "blouse":-1,"currency":-1,"current":1,"currently":1,"edition":1,
+      "edit":1,"either… or…":-1,"enormous":1,"equal":1,"equalize":-1,
+      "equate":-1,"equator":-1,"extreme":1,"extremist":1,"firm":1,
+      "firmly":-1,"flame":-1,"force":1,"forceful":-1,"enforce":-1,
+      "enforcement":-1,"frequent":-1,"frequency":1,"frequently":1,
+      "game":1,"immediate":1,"immediately":1,"important":1,"importance":1,
+      "know":1,"unknown":1,"knowledge":1,"known":1,"large":1,"late":1,
+      "lately":-1,"lead to":-1,"mislead":-1,"likewise":-1,"near":1,
+      "nearby":-1,"nearly":1,"not only… (but also)":1,"owing to":-1,
+      "perfect":1,"possible":1,"possibility":1,"possibly":1,"rapid":-1,
+      "rapidly":-1,"rare":1,"rarely":1,"reason":1,"reasonable":1,
+      "unreasonable":-1,"recent":1,"recently":1,"refuse":1,"regular":1,
+      "regulate":0,"irregular":1,"single":1,"surprise":1,"terrible":1,
+      "then":1,"total":1,"totally":1,"under":1,"yet":1,"zero":1
+    },
+    3:{
+      "accept":1,"except":-1,"expect":1,"adult":1,"analyze":1,"appreciate":1,
+      "attack":1,"author":1,"authorize":1,"authority":1,"back":1,"backward":-1,
+      "ban":1,"banish":-1,"blame":-1,"border":1,"brave":1,"break":1,"brake":-1,
+      "breakdown":-1,"outbreak":-1,"celebrate":1,"celebration":1,"clever":1,
+      "cleverly":1,"close":1,"enclose":-1,"collect":1,"collective":1,
+      "collectively":-1,"comfort":1,"comfortable":1,"comfortably":1,"complain":1,
+      "content":-1,"contest":-1,"crime":1,"criminal":1,"culture":1,"cultural":-1,
+      "delay":1,"delight":-1,"destroy":1,"destruction":1,"die":1,"dying":-1,
+      "die out":-1,"distant":1,"distance":1,"expose":-1,"exposure":-1,"exposed":-1,
+      "favor":1,"flexible":1,"form":1,"reform":-1,"transform":1,"uniform":-1,
+      "uniformity":-1,"grow":1,"growth":1,"high":1,"inside":1,"internal":-1,
+      "kit":-1,"land":1,"law":1,"legal":1,"illegal":1,"legislate":-1,
+      "legislator":-1,"legislation":-1,"legislative":-1,"lie":1,"male":1,
+      "female":1,"mistake":1,"mistaken":1,"mistakenly":1,"politics":1,
+      "political":1,"poor":1,"poorly":-1,"power":1,"powerful":1,"prove":1,
+      "proof":1,"punish":1,"punishment":1,"regret":-1,"regrettable":-1,
+      "slow":1,"suffer":1,"suffering":1,"support":1
+    },
+    4:{
+      "able":1,"ability":1,"affect":1,"effect":1,"effective":1,"apology":1,
+      "argue":1,"argument":1,"ask":1,"assistance":1,"assume":1,"assumption":-1,
+      "average":1,"compare":1,"consider":1,"considerable":-1,"consideration":1,
+      "inconsiderate":-1,"control":1,"discuss":1,"discussion":1,"disguise":-1,
+      "fair":1,"fairly":1,"unfair":1,"friendly":1,"health":1,"heal":1,
+      "healthy":1,"unhealthy":1,"wealth":1,"wealthy":1,"ignorant":-1,
+      "ignorance":-1,"ignore":1,"instead":1,"insulation":-1,"insult":-1,
+      "jealousy":-1,"method":1,"principal":1,"principle":-1,"protect":1,
+      "protection":1,"protective":-1,"regal":-1,"silence":1,"silent":-1,
+      "silencing":-1,"simple":1,"simplicity":-1,"simplify":-1,"sink":-1,
+      "tiny":-1,"tire":-1,"tirelessly":-1,"tool":-1,"tropical":1,"truth":1,
+      "vague":-1,"war":1,"warm":1,"warmly":1,"wear":1,"worn":-1,"wide":-1,
+      "widely":-1,"young":1
+    },
+    5:{
+      "absolutely":1,"absolute":1,"accident":1,"among":-1,"artificial":1,
+      "artificially":1,"attract":-1,"attraction":-1,"attractive":1,"unattractive":1,
+      "balance":1,"base":1,"character":1,"characteristic":1,"characterize":-1,
+      "compete":1,"competition":1,"concern":1,"cure":-1,"curse":-1,"dim":-1,
+      "escape":-1,"access":1,"inaccessible":-1,"excess":-1,"excessive":-1,
+      "generalize":-1,"general":1,"image":1,"imagine":-1,"imaginative":-1,
+      "imaginary":-1,"interest":1,"interesting":1,"joy":-1,"lame":-1,"link":1,
+      "linked with":-1,"lose":1,"lost":1,"mean":1,"meaning":1,"means":1,
+      "medicine":1,"medication":-1,"mild":-1,"mobile":1,"move":1,"need":1,
+      "pardon":-1,"progress":1,"progressive":-1,"research":1,"rise":1,"rude":1,
+      "rudely":-1,"scale":-1,"science":1,"scientific":-1,"scientist":1,
+      "search":1,"seat":1,"send":1,"session":-1,"soft":1,"softly":-1,
+      "source":1,"stage":1,"tail":-1,"therapy":1,"turn":1,"type":1,
+      "use":1,"usefulness":-1
+    },
+    6:{
+      "active":1,"addition":1,"additional":-1,"in addition":1,"advise":1,
+      "aware":-1,"besides":-1,"blind":1,"blindly":1,"blood":1,"bleed":-1,
+      "blunt":-1,"broad":-1,"broadly":-1,"bury":-1,"carefully":1,"century":1,
+      "certify":-1,"certificate":-1,"clean":1,"column":-1,"confusion":-1,
+      "confusing":1,"consume":1,"consumer":-1,"deal":1,"deliberate":-1,
+      "deliberation":-1,"destination":1,"destined for":-1,"develop":1,
+      "developed":1,"development":1,"doubt":1,"drop":1,"drop out":-1,
+      "empire":1,"enjoy":1,"envelope":-1,"face":1,"facial":-1,"globe":1,
+      "good":1,"goods":-1,"hint":-1,"hope":1,"language":1,"learn":1,
+      "lesson":1,"once":1,"opinion":1,"safe":1,"sudden":-1,"surface":-1,
+      "appeal":1,"appealed to":-1,"assign":-1,"harm":1
+    },
+    7:{
+      "other":1,"area":1,"behave":1,"behavior":1,"buy":1,"ceremony":-1,
+      "condition":1,"conditional":-1,"create":1,"creative":1,"creature":1,
+      "debate":1,"debt":1,"deliver":1,"delivery":1,"element":1,"employ":1,
+      "employment":-1,"endure":-1,"endurable":-1,"endurance":-1,"engagement":-1,
+      "engage in":-1,"enough":1,"enrich":-1,"erase":1,"examine":-1,
+      "experience":1,"explain":1,"explanation":-1,"fit":1,"garbage":1,
+      "gift":1,"guess":1,"headache":-1,"hear":1,"installation":1,"involve":-1,
+      "join":1,"less":1,"more":1,"loud":-1,"loudly":-1,"molecule":1,
+      "narrow":1,"option":1,"proper":-1,"properly":-1,"question":1,
+      "questioned":-1,"respond":-1,"response":1,"correspond":-1,
+      "correspondence":-1,"serious":1,"tall":1,"teach":1,"test":1,
+      "think":1,"unit":1,"value":1,"valuable":1,"evaluate":1
+    },
+    8:{
+      "alert":-1,"angle":1,"arrive":1,"assert":-1,"availability":-1,"begin":1,
+      "beginning":1,"bend":-1,"bent":-1,"bend over":-1,"between":1,"borrow":-1,
+      "chapter":1,"circuit":-1,"circular":1,"custom":-1,"exchange":1,
+      "explorer":1,"exploring":-1,"express":1,"expression":-1,"fast":1,
+      "find":1,"findings":1,"forget":1,"forgive":1,"front":1,"function":1,
+      "malfunction":1,"gap":1,"hobby":1,"hold":1,"insert":-1,"light":1,
+      "lightly":-1,"light bulb":-1,"local":1,"location":1,"natural":1,
+      "order":-1,"patient":1,"pipe":-1,"pretend":-1,"produce":1,"reproduce":-1,
+      "profession":-1,"publish":1,"public":1,"quick":1,"quickly":1,"respect":1,
+      "restrict":-1,"restriction":-1,"seem":-1,"several":-1,"state":1,
+      "tidy":-1,"trap":-1,"trust":1,"thrust":-1,"without":1,"write":1,"writer":1
+    },
+    9:{
+      "coast":1,"deep":1,"depth":1,"demand":1,"design":1,"display":-1,
+      "document":1,"door":1,"doorsteps":-1,"draw":1,"draw upon":-1,"drink":1,
+      "eat":1,"edible":-1,"factory":1,"final":1,"finally":1,"floor":1,
+      "fly":1,"fruit":1,"fruitless":1,"fuel":1,"job":1,"knot":-1,
+      "landscape":-1,"lean":-1,"load":-1,"match":1,"meet":1,"meeting":1,
+      "name":1,"namely":-1,"neighboring":1,"note":1,"notebook":1,"pause":1,
+      "pet":1,"pick":1,"poet":-1,"poem":-1,"poetry":-1,"practice":1,
+      "purchase":1,"push":1,"quite":-1,"race":1,"racial":-1,"racism":-1,
+      "racing":-1,"rain":1,"raise":1,"rate":1,"reach":-1,"rehearsal":-1,
+      "round":1,"say":1,"season":1,"service":1,"show":1,"sign":1,"signal":1,
+      "space":1,"spacecraft":-1,"structure":-1,"topic":1,"voice":1,
+      "volunteer":1,"weight":1
+    },
+    10:{
+      "agency":-1,"arrangement":-1,"blow":-1,"bone":1,"down":1,"dusty":-1,
+      "dwell":-1,"dwelling":-1,"education":1,"educational":-1,"effort":-1,
+      "empty":1,"end":1,"environment":1,"essay":1,"exhibit":-1,"exhibition":-1,
+      "fact":1,"famous":1,"infamous":1,"glow":-1,"invite":1,"layer":-1,
+      "leave":1,"length":1,"open":1,"people":1,"perform":1,"performer":-1,
+      "performance":1,"personal":1,"personality":1,"place":1,"displacement":-1,
+      "plan":1,"preparation":-1,"press":-1,"promise":1,"property":-1,
+      "retire":1,"retirement":1,"select":1,"share":1,"shy":1,"skill":1,
+      "skin":1,"sky":1,"spend":1,"staff":1,"station":1,"supply":-1,
+      "surrender":-1,"survive":1,"system":1,"systematic":1,"team":1,
+      "train":1,"training":1,"translate":1,"translation":1,"vacation":1,
+      "vote":1,"wave":1,"wind":1,"windmill":1,"wine":1,"wood":-1,"work":1
+    }
+  },
+  medium:{1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{}},
+  hard:{1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{}}
+};
+
+const WORDS = {
+  easy: {
+    1: [
+      {en:"above",he:"למעלה, מעל משהו, יותר ממשהו"},
+      {en:"according to",he:"לפי"},
+      {en:"accordance",he:"התאמה, תיאום"},
+      {en:"accordingly",he:"בהתאם"},
+      {en:"although",he:"למרות"},
+      {en:"always",he:"תמיד"},
+      {en:"approve",he:"להסכים, לאשר"},
+      {en:"because",he:"כי, מכיוון ש"},
+      {en:"believe",he:"להאמין"},
+      {en:"belief",he:"אמונה"},
+      {en:"unbelievable",he:"לא ייאמן"},
+      {en:"cause",he:"גורם, לגרום"},
+      {en:"certain",he:"מסוים, וודאי, בטוח"},
+      {en:"certainty",he:"ביטחון, ודאות"},
+      {en:"complete",he:"להשלים, שלם"},
+      {en:"completely",he:"לחלוטין"},
+      {en:"complicate",he:"לסבך"},
+      {en:"complication",he:"סיבוך"},
+      {en:"complicated",he:"מסובך"},
+      {en:"contrary",he:"הפך, ניגוד"},
+      {en:"contribute",he:"לתרום ל"},
+      {en:"correct",he:"לתקן, מדויק, נכון"},
+      {en:"cruel",he:"אכזרי"},
+      {en:"damage",he:"להזיק, נזק, אובדן, הפסד"},
+      {en:"danger",he:"סכנה"},
+      {en:"endanger",he:"לסכן"},
+      {en:"dangerous",he:"מסוכן"},
+      {en:"decrease",he:"להפחית, לצמצם, הפחתה"},
+      {en:"deem",he:"לסבור, להעריך"},
+      {en:"despite",he:"למרות"},
+      {en:"different",he:"שונה"},
+      {en:"indifferent",he:"אדיש"},
+      {en:"differ",he:"נבדל, שונה, לחלוק על"},
+      {en:"difference",he:"הבדל, שוני"},
+      {en:"difficult",he:"קשה, מורכב"},
+      {en:"disappoint",he:"לאכזב"},
+      {en:"disaster",he:"אסון"},
+      {en:"disastrous",he:"הרסני"},
+      {en:"entire",he:"שלם, מכלול"},
+      {en:"improve",he:"לשפר"},
+      {en:"improvise",he:"לאלתר"},
+      {en:"just",he:"כרגע, זה עתה, רק, צודק, הגון"},
+      {en:"justify",he:"להצדיק"},
+      {en:"justified",he:"מוצדק"},
+      {en:"justification",he:"הצדקה"},
+      {en:"main",he:"עיקרי, ראשי"},
+      {en:"mainly",he:"בעיקר"},
+      {en:"negative",he:"שלילי, תשליל"},
+      {en:"positive",he:"חיובי, בטוח"},
+      {en:"never",he:"אף פעם, מעולם לא"},
+      {en:"object",he:"להתנגד, אובייקט, פריט"},
+      {en:"objection",he:"התנגדות"},
+      {en:"objective",he:"מטרה, תכלית, אובייקטיבי"},
+      {en:"offensive",he:"מעליב, פוגעני, דוחה, התקפה"},
+      {en:"inoffensive",he:"שאינו פוגעני או מעליב"},
+      {en:"offend",he:"לפגוע, להעליב"},
+      {en:"offer",he:"להציע, לנדב, הצעה"},
+      {en:"official",he:"רשמי, פקיד ציבור"},
+      {en:"unofficial",he:"בלתי רשמי"},
+      {en:"often",he:"בדרך כלל, לעתים קרובות"},
+      {en:"opposite",he:"הפוך, הפך, ממול, מנגד"},
+      {en:"opposing",he:"מתנגד"},
+      {en:"opposition",he:"התנגדות, אופוזיציה"},
+      {en:"previous",he:"הקודם"},
+      {en:"previously",he:"קודם לכן, לפני כן"},
+      {en:"primarily",he:"בעיקר, בראש ובראשונה"},
+      {en:"primary",he:"ראשוני, עיקרי"},
+      {en:"reduce",he:"לצמצם, להפחית"},
+      {en:"result",he:"תוצאה"},
+      {en:"similar",he:"דומה"},
+      {en:"stable",he:"יציב, אורווה"},
+      {en:"stabilize",he:"לייצב"},
+      {en:"unstable",he:"לא יציב"},
+      {en:"weather",he:"מזג אוויר"},
+      {en:"when",he:"מתי, כאשר"},
+      {en:"usual",he:"רגיל, שגרתי"},
+      {en:"usually",he:"בדרך כלל, לרוב"},
+      {en:"unusual",he:"לא רגיל"},
+    ],
+    2:[
+      {en:"admire",he:"להעריץ, להתפעל"},
+      {en:"admiration",he:"הערצה"},
+      {en:"admirable",he:"נערץ"},
+      {en:"ancient",he:"עתיק"},
+      {en:"best",he:"הכי טוב, משובח, באופן הטוב ביותר"},
+      {en:"blouse",he:"חולצה"},
+      {en:"currency",he:"מטבע, מחזור, נוהג"},
+      {en:"current",he:"זרם, מהלך, נוכחי, שגור, נהוג"},
+      {en:"currently",he:"כרגע"},
+      {en:"edition",he:"מהדורה, גירסה"},
+      {en:"edit",he:"לערוך"},
+      {en:"either… or…",he:"...או ש... או ש"},
+      {en:"enormous",he:"עצום"},
+      {en:"equal",he:"שווה"},
+      {en:"equalize",he:"לאזן, להשוות"},
+      {en:"equate",he:"להשוות, להתאים"},
+      {en:"equator",he:"קו המשווה"},
+      {en:"extreme",he:"קיצוני"},
+      {en:"extremist",he:"אדם קיצוני, מרחיק לכת"},
+      {en:"firm",he:"מוצק, קשה, תקיף, נחוש, חברה, פירמה"},
+      {en:"firmly",he:"בתקיפות, בנחישות, בחוזקה"},
+      {en:"flame",he:"להצית, להבעיר, להבה, בעירה"},
+      {en:"force",he:"להכריח, לאלץ, כוח, אלימות, כוח צבאי"},
+      {en:"forceful",he:"חזק, משכנע, יעיל"},
+      {en:"enforce",he:"לאכוף"},
+      {en:"enforcement",he:"אכיפה"},
+      {en:"frequent",he:"תדיר"},
+      {en:"frequency",he:"תדר, תדירות"},
+      {en:"frequently",he:"לעיתים קרובות"},
+      {en:"game",he:"משחק, תחרות, ציד"},
+      {en:"immediate",he:"מיידי, דחוף"},
+      {en:"immediately",he:"מייד"},
+      {en:"important",he:"חשוב"},
+      {en:"importance",he:"חשיבות"},
+      {en:"know",he:"לדעת"},
+      {en:"unknown",he:"לא ידוע, שטרם התגלה, נעלם (במתמטיקה)"},
+      {en:"knowledge",he:"ידע"},
+      {en:"known",he:"ידוע"},
+      {en:"large",he:"גדול"},
+      {en:"late",he:"מאוחר, מנוח"},
+      {en:"lately",he:"לאחרונה"},
+      {en:"lead to",he:"להוביל ל"},
+      {en:"mislead",he:"להטעות, להוליך שולל"},
+      {en:"likewise",he:"באופן דומה, כמו כן"},
+      {en:"near",he:"קרוב, ליד"},
+      {en:"nearby",he:"קרוב"},
+      {en:"nearly",he:"כמעט, בקירוב"},
+      {en:"not only… (but also)",he:"לא רק... (אלא גם)"},
+      {en:"owing to",he:"בשל, בגלל"},
+      {en:"perfect",he:"לשכלל, לשפר, מושלם"},
+      {en:"possible",he:"אפשרי"},
+      {en:"possibility",he:"אפשרות"},
+      {en:"possibly",he:"יתכן"},
+      {en:"rapid",he:"מהיר"},
+      {en:"rapidly",he:"במהירות"},
+      {en:"rare",he:"נדיר, נא"},
+      {en:"rarely",he:"לעתים רחוקות"},
+      {en:"reason",he:"היגיון, סיבה"},
+      {en:"reasonable",he:"הגיוני"},
+      {en:"unreasonable",he:"לא הגיוני, שאינו שומע בקול ההיגיון"},
+      {en:"recent",he:"שהתרחש לאחרונה, חדש"},
+      {en:"recently",he:"לאחרונה"},
+      {en:"refuse",he:"לסרב"},
+      {en:"regular",he:"רגיל, סדיר"},
+      {en:"regulate",he:"לווסת, להסדיר"},
+      {en:"irregular",he:"לא סדיר, חריג"},
+      {en:"single",he:"בודד, אחד, יחיד, רווק"},
+      {en:"surprise",he:"להפתיע, הפתעה"},
+      {en:"terrible",he:"נורא, איום"},
+      {en:"then",he:"כאשר, אז"},
+      {en:"total",he:"סך, סכום, שלם"},
+      {en:"totally",he:"לגמרי"},
+      {en:"under",he:"מתחת"},
+      {en:"yet",he:"עדיין, אף על פי כן"},
+      {en:"zero",he:"לאפס, אפס, אפסי"},
+    ],
+    3:[
+      {en:"accept",he:"לקבל"},
+      {en:"except",he:"חוץ מ"},
+      {en:"expect",he:"לצפות, לקוות"},
+      {en:"adult",he:"מבוגר"},
+      {en:"analyze",he:"לבצע הערכה, לנתח"},
+      {en:"appreciate",he:"להביע הערכה, לחוש הערכה"},
+      {en:"attack",he:"לתקוף, תקיפה"},
+      {en:"author",he:"סופר, כותב"},
+      {en:"authorize",he:"לאשר, להסמיך"},
+      {en:"authority",he:"רשות, סמכות"},
+      {en:"back",he:"גב, אחורי, אחורנית, בחזרה"},
+      {en:"backward",he:"לאחור"},
+      {en:"ban",he:"לאסור, להחרים, חרם, נידוי, איסור"},
+      {en:"banish",he:"לגרש, להגלות"},
+      {en:"blame",he:"להאשים, אשמה"},
+      {en:"border",he:"גבול, תחום, קצה"},
+      {en:"brave",he:"אמיץ"},
+      {en:"break",he:"לשבור"},
+      {en:"brake",he:"לבלום, מעצור, בלם"},
+      {en:"breakdown",he:"התמוטטות"},
+      {en:"outbreak",he:"התפרצות"},
+      {en:"celebrate",he:"לחגוג, להלל, לשבח"},
+      {en:"celebration",he:"חגיגה"},
+      {en:"clever",he:"חכם, פיקח"},
+      {en:"cleverly",he:"בחכמה"},
+      {en:"close",he:"לסגור, קרוב"},
+      {en:"enclose",he:"להקיף, לסגור, לצרף"},
+      {en:"collect",he:"לאסוף"},
+      {en:"collective",he:"קבוצה, אוסף, אסופה, גוף שנשלט על ידי קבוצת אנשים"},
+      {en:"collectively",he:"במשותף, ביחד, באופן קולקטיבי"},
+      {en:"comfort",he:"לנחם, נוחיות"},
+      {en:"comfortable",he:"נוח"},
+      {en:"comfortably",he:"בנחת, בנוחות"},
+      {en:"complain",he:"להתלונן"},
+      {en:"content",he:"לספק, שבע רצון, מסופק, שביעות רצון, תוכן"},
+      {en:"contest",he:"להתחרות, תחרות"},
+      {en:"crime",he:"פשע, עברה"},
+      {en:"criminal",he:"פושע, עבריין"},
+      {en:"culture",he:"תרבות"},
+      {en:"cultural",he:"תרבותי"},
+      {en:"delay",he:"לדחות, לעכב, דחיה, עיכוב"},
+      {en:"delight",he:"תענוג, הנאה, אושר"},
+      {en:"destroy",he:"להרוס"},
+      {en:"destruction",he:"הרס"},
+      {en:"die",he:"למות, להיהרג"},
+      {en:"dying",he:"גוסס"},
+      {en:"die out",he:"לדעוך"},
+      {en:"distant",he:"רחוק, מרוחק"},
+      {en:"distance",he:"מרחק"},
+      {en:"expose",he:"לחשוף, לגלות, להציג"},
+      {en:"exposure",he:"חשיפה, גילוי"},
+      {en:"exposed",he:"חשוף"},
+      {en:"favor",he:"טובה, חסד"},
+      {en:"flexible",he:"גמיש"},
+      {en:"form",he:"לייצר, טופס, צורה"},
+      {en:"reform",he:"לתקן, להחזיר למוטב, תיקון, רפורמה"},
+      {en:"transform",he:"להפוך, לשנות צורה"},
+      {en:"uniform",he:"אחיד, מדים"},
+      {en:"uniformity",he:"אחידות"},
+      {en:"grow",he:"לצמוח, לגדול, לגדל"},
+      {en:"growth",he:"צמיחה, גדילה"},
+      {en:"high",he:"גבוה"},
+      {en:"inside",he:"בפנים, פנימי"},
+      {en:"internal",he:"פנימי"},
+      {en:"kit",he:"ערכה"},
+      {en:"land",he:"לנחות, להגיע לקרקע, אדמה, שטח"},
+      {en:"law",he:"חוק, משפט, תורה"},
+      {en:"legal",he:"חוקי"},
+      {en:"illegal",he:"בלתי חוקי"},
+      {en:"legislate",he:"לחוקק"},
+      {en:"legislator",he:"מחוקק"},
+      {en:"legislation",he:"חקיקה"},
+      {en:"legislative",he:"חקיקתי"},
+      {en:"lie",he:"לשכב, לשקר, שקר"},
+      {en:"male",he:"זכר, גבר"},
+      {en:"female",he:"נקבה, אישה"},
+      {en:"mistake",he:"לשגות, להתבלבל, טעות"},
+      {en:"mistaken",he:"מוטעה"},
+      {en:"mistakenly",he:"בטעות, בשוגג, בהיסח הדעת"},
+      {en:"politics",he:"פוליטיקה"},
+      {en:"political",he:"פוליטי"},
+      {en:"poor",he:"עני, עלוב, דל"},
+      {en:"poorly",he:"בצורה גרועה"},
+      {en:"power",he:"כוח"},
+      {en:"powerful",he:"חזק"},
+      {en:"prove",he:"להוכיח"},
+      {en:"proof",he:"הוכחה"},
+      {en:"punish",he:"להעניש"},
+      {en:"punishment",he:"עונש"},
+      {en:"regret",he:"להתחרט, חרטה"},
+      {en:"regrettable",he:"מצער"},
+      {en:"slow",he:"להאט, איטי"},
+      {en:"suffer",he:"לסבול"},
+      {en:"suffering",he:"סבל, ייסורים"},
+      {en:"support",he:"לתמוך, תמיכה"},
+    ],
+    4:[
+      {en:"able",he:"יכול"},
+      {en:"ability",he:"יכולת"},
+      {en:"affect",he:"להשפיע, לרגש, להעמיד פנים"},
+      {en:"effect",he:"השפעה"},
+      {en:"effective",he:"אפקטיבי, יעיל, מועיל"},
+      {en:"apology",he:"התנצלות"},
+      {en:"argue",he:"להתווכח, לטעון"},
+      {en:"argument",he:"ויכוח, טיעון"},
+      {en:"ask",he:"לשאול, לבקש"},
+      {en:"assistance",he:"סיוע, עזרה"},
+      {en:"assume",he:"להניח, לקבל, ליטול, להתיימר"},
+      {en:"assumption",he:"הנחה, השערה, יומרנות, לקיחת תפקיד או אחריות"},
+      {en:"average",he:"ממוצע"},
+      {en:"compare",he:"להשוות"},
+      {en:"consider",he:"להחשיב, להביא בחשבון"},
+      {en:"considerable",he:"ניכר"},
+      {en:"consideration",he:"התחשבות, שיקול, תשלום, דעה"},
+      {en:"inconsiderate",he:"לא מתחשב, חסר רגישות"},
+      {en:"control",he:"לשלוט, שליטה, בקרה"},
+      {en:"discuss",he:"לדון"},
+      {en:"discussion",he:"דיון"},
+      {en:"disguise",he:"להתחפש, תחפושת, מסווה"},
+      {en:"fair",he:"הוגן, צודק, יפה"},
+      {en:"fairly",he:"בהגינות, למדי"},
+      {en:"unfair",he:"בלתי הוגן"},
+      {en:"friendly",he:"חברותי"},
+      {en:"health",he:"בריאות"},
+      {en:"heal",he:"לרפא, להבריא"},
+      {en:"healthy",he:"בריא"},
+      {en:"unhealthy",he:"לא בריא, לא רצוי"},
+      {en:"wealth",he:"עושר"},
+      {en:"wealthy",he:"עשיר, בעל הון"},
+      {en:"ignorant",he:"בור, טיפש"},
+      {en:"ignorance",he:"בורות"},
+      {en:"ignore",he:"להתעלם"},
+      {en:"instead",he:"במקום"},
+      {en:"insulation",he:"בידוד"},
+      {en:"insult",he:"להעליב, עלבון"},
+      {en:"jealousy",he:"קנאה"},
+      {en:"method",he:"שיטה"},
+      {en:"principal",he:"עיקרי, ראשי, מנהל בית ספר, הון"},
+      {en:"principle",he:"עיקרון"},
+      {en:"protect",he:"להגן"},
+      {en:"protection",he:"הגנה"},
+      {en:"protective",he:"הגנתי, מגן"},
+      {en:"regal",he:"מלכותי, נפלא"},
+      {en:"silence",he:"להשתיק, שקט, דממה"},
+      {en:"silent",he:"דומם, חרישי"},
+      {en:"silencing",he:"משתיק, משקיט"},
+      {en:"simple",he:"פשוט, טיפש"},
+      {en:"simplicity",he:"פשטות"},
+      {en:"simplify",he:"לפשט"},
+      {en:"sink",he:"לשקוע, לטבוע, להנמיך, להטביע, כיור"},
+      {en:"tiny",he:"זעיר"},
+      {en:"tire",he:"להתיש, לעייף"},
+      {en:"tirelessly",he:"באופן נמרץ, חסר עייפות"},
+      {en:"tool",he:"לעבוד, לתפעל, כלי (לרוב כלי עבודה)"},
+      {en:"tropical",he:"מהאיזור הטרופי (גיאוגרפיה), חם ולח"},
+      {en:"truth",he:"אמת"},
+      {en:"vague",he:"מרומז, לא ודאי, לא ידוע, מטושטש, מעורפל"},
+      {en:"war",he:"מלחמה"},
+      {en:"warm",he:"לחמם, חמים"},
+      {en:"warmly",he:"בחמימות"},
+      {en:"wear",he:"ללבוש, לשאת, לעייף"},
+      {en:"worn",he:"בלוי משימוש, שחוק, שלבשו אותו"},
+      {en:"wide",he:"רחב"},
+      {en:"widely",he:"במידה מרובה, במרחק"},
+      {en:"young",he:"צעיר"},
+    ],
+    5:[
+      {en:"absolutely",he:"לחלוטין"},
+      {en:"absolute",he:"מוחלט"},
+      {en:"accident",he:"תאונה"},
+      {en:"among",he:"בקרב"},
+      {en:"artificial",he:"מלאכותי"},
+      {en:"artificially",he:"באופן מלאכותי"},
+      {en:"attract",he:"למשוך"},
+      {en:"attraction",he:"משיכה"},
+      {en:"attractive",he:"מושך"},
+      {en:"unattractive",he:"לא מושך"},
+      {en:"balance",he:"לאזן, איזון"},
+      {en:"base",he:"לבסס, בסיס"},
+      {en:"character",he:"אישיות, דמות, טיפוס, אות, תו"},
+      {en:"characteristic",he:"מאפיין"},
+      {en:"characterize",he:"לאפיין"},
+      {en:"compete",he:"להתחרות"},
+      {en:"competition",he:"תחרות"},
+      {en:"concern",he:"דאגה, עניין"},
+      {en:"cure",he:"לרפא, רפואה"},
+      {en:"curse",he:"לקלל, קללה"},
+      {en:"dim",he:"לעמעם, עמום"},
+      {en:"escape",he:"לברוח, בריחה"},
+      {en:"access",he:"לגשת, לזכות בגישה, כניסה, גישה"},
+      {en:"inaccessible",he:"לא נגיש"},
+      {en:"excess",he:"עודף, יתר, הגזמה"},
+      {en:"excessive",he:"מוגזם, מופרז"},
+      {en:"generalize",he:"להכליל"},
+      {en:"general",he:"כללי"},
+      {en:"image",he:"לדמות, תמונה, דמות, תדמית"},
+      {en:"imagine",he:"לדמיין"},
+      {en:"imaginative",he:"דמיוני, בעל דמיון"},
+      {en:"imaginary",he:"דמיוני, מדומה"},
+      {en:"interest",he:"עניין, אינטרס, ריבית"},
+      {en:"interesting",he:"מעניין"},
+      {en:"joy",he:"שמחה"},
+      {en:"lame",he:"נכה, חלש, עלוב (סלנג)"},
+      {en:"link",he:"לחבר, חוליה, קישור"},
+      {en:"linked with",he:"קשור ל"},
+      {en:"lose",he:"לאבד, להפסיד"},
+      {en:"lost",he:"אבוד, מבוזבז"},
+      {en:"mean",he:"להתכוון, ממוצע, אכזרי"},
+      {en:"meaning",he:"משמעות"},
+      {en:"means",he:"אמצעים, משאבים"},
+      {en:"medicine",he:"תרופה, רפואה"},
+      {en:"medication",he:"טיפול בתרופות, תרופה"},
+      {en:"mild",he:"מתון, עדין, בעל עוצמה נמוכה"},
+      {en:"mobile",he:"נייד"},
+      {en:"move",he:"להזיז, לרגש"},
+      {en:"need",he:"להזדקק למשהו, צורך, מצוקה"},
+      {en:"pardon",he:"לסלוח, למחול, סליחה, חנינה"},
+      {en:"progress",he:"להתקדם, התקדמות, קידמה"},
+      {en:"progressive",he:"מתקדם, מדורג"},
+      {en:"research",he:"לחקור, מחקר"},
+      {en:"rise",he:"להתרומם, להזדקף, עלייה, להתעורר"},
+      {en:"rude",he:"חצוף"},
+      {en:"rudely",he:"בחוצפה"},
+      {en:"scale",he:"להעלות, להעפיל, לשקול, למדוד, סולם, קנה מידה, משקל, מאזניים, קשקש"},
+      {en:"science",he:"מדע"},
+      {en:"scientific",he:"מדעי"},
+      {en:"scientist",he:"מדען"},
+      {en:"search",he:"לחפש, חיפוש"},
+      {en:"seat",he:"להושיב, מושב, כסא, ישבן"},
+      {en:"send",he:"לשלוח"},
+      {en:"session",he:"זמן קיום של פעילות כלשהי, ישיבה, מפגש"},
+      {en:"soft",he:"רך"},
+      {en:"softly",he:"ברכות"},
+      {en:"source",he:"להגיש ממקור מסוים, מקור, מוצא"},
+      {en:"stage",he:"לביים, שלב, במה"},
+      {en:"tail",he:"לעקוב, זנב, החלק האחורי"},
+      {en:"therapy",he:"תרפיה, טיפול"},
+      {en:"turn",he:"לסובב, סיבוב, תור, הזדמנות"},
+      {en:"type",he:"סוג"},
+      {en:"use",he:"להשתמש, שימוש, תועלת, מטרה"},
+      {en:"usefulness",he:"שימושיות"},
+    ],
+    6:[
+      {en:"active",he:"פעיל"},
+      {en:"addition",he:"תוספת"},
+      {en:"additional",he:"נוסף"},
+      {en:"in addition",he:"בנוסף"},
+      {en:"advise",he:"לייעץ, להמליץ, להודיע"},
+      {en:"aware",he:"להיות מודע"},
+      {en:"besides",he:"כמו כן, חוץ מזה"},
+      {en:"blind",he:"לעוור, עיוור"},
+      {en:"blindly",he:"באופן עיוור"},
+      {en:"blood",he:"דם"},
+      {en:"bleed",he:"לדמם"},
+      {en:"blunt",he:"קהה, בוטה"},
+      {en:"broad",he:"רחב"},
+      {en:"broadly",he:"בדרך כלל, באופן נרחב"},
+      {en:"bury",he:"לקבור"},
+      {en:"carefully",he:"בזהירות"},
+      {en:"century",he:"מאה (תקופה)"},
+      {en:"certify",he:"לאשר, להסמיך"},
+      {en:"certificate",he:"תעודה, אישור"},
+      {en:"clean",he:"לנקות, נקי"},
+      {en:"column",he:"עמוד, טור"},
+      {en:"confusion",he:"מהומה, בלבול"},
+      {en:"confusing",he:"מבלבל"},
+      {en:"consume",he:"לצרוך, לעכל"},
+      {en:"consumer",he:"צרכן"},
+      {en:"deal",he:"להתמודד, עסקה"},
+      {en:"deliberate",he:"לדון, מכוון"},
+      {en:"deliberation",he:"דיון, שקילה, תשומת לב"},
+      {en:"destination",he:"יעד"},
+      {en:"destined for",he:"מיועד ל"},
+      {en:"develop",he:"לפתח"},
+      {en:"developed",he:"מפותח, מתועש"},
+      {en:"development",he:"פיתוח, התפתחות"},
+      {en:"doubt",he:"להטיל ספק, ספק"},
+      {en:"drop",he:"להפיל, להנמיך, טיפה, מעט, קצת"},
+      {en:"drop out",he:"לנשור (למשל מהלימודים)"},
+      {en:"empire",he:"אימפריה"},
+      {en:"enjoy",he:"ליהנות"},
+      {en:"envelope",he:"מעטפה, מעטפת, עטיפה"},
+      {en:"face",he:"לפנות, לעמוד פנים אל פנים, פנים"},
+      {en:"facial",he:"שקשור לפנים"},
+      {en:"globe",he:"גלובוס, כדור הארץ"},
+      {en:"good",he:"טוב"},
+      {en:"goods",he:"סחורה"},
+      {en:"hint",he:"לרמוז, רמז"},
+      {en:"hope",he:"לקוות, תקווה"},
+      {en:"language",he:"שפה"},
+      {en:"learn",he:"ללמוד"},
+      {en:"lesson",he:"שיעור"},
+      {en:"once",he:"פעם, פעם אחת"},
+      {en:"opinion",he:"דעה"},
+      {en:"safe",he:"בטוח, כספת"},
+      {en:"sudden",he:"פתאומי"},
+      {en:"surface",he:"לעלות, להגיח, משטח"},
+      {en:"appeal",he:"לערער, פנייה, ערעור, משיכה"},
+      {en:"appealed to",he:"משך, פנה אל"},
+      {en:"assign",he:"להקצות"},
+      {en:"harm",he:"להזיק, פגיעה"},
+    ],
+    7:[
+      {en:"other",he:"אחר, שונה"},
+      {en:"area",he:"אזור"},
+      {en:"behave",he:"להתנהג"},
+      {en:"behavior",he:"התנהגות, התנהלות"},
+      {en:"buy",he:"לקנות, לרכוש"},
+      {en:"ceremony",he:"טקס"},
+      {en:"condition",he:"תנאי, מצב"},
+      {en:"conditional",he:"מותנה, בהנחה מסוימת"},
+      {en:"create",he:"לייצר, ליצור"},
+      {en:"creative",he:"יצירתי"},
+      {en:"creature",he:"יצור, יציר"},
+      {en:"debate",he:"להתדיין, להתלבט, דיון"},
+      {en:"debt",he:"חוב"},
+      {en:"deliver",he:"לשלוח, להעביר, לשחרר, ליילד, לשאת דברים"},
+      {en:"delivery",he:"משלוח, לידה"},
+      {en:"element",he:"יסוד, אלמנט, רכיב"},
+      {en:"employ",he:"להעסיק, להפעיל"},
+      {en:"employment",he:"תעסוקה"},
+      {en:"endure",he:"לסבול, לשאת, להחזיק מעמד, להתמשך"},
+      {en:"endurable",he:"נסבל"},
+      {en:"endurance",he:"כוח סבל"},
+      {en:"engagement",he:"התחייבות, מחויבות, אירוסין"},
+      {en:"engage in",he:"להתעסק ב"},
+      {en:"enough",he:"מספיק, די"},
+      {en:"enrich",he:"להעשיר"},
+      {en:"erase",he:"למחוק"},
+      {en:"examine",he:"לבחון"},
+      {en:"experience",he:"ניסיון"},
+      {en:"explain",he:"להסביר"},
+      {en:"explanation",he:"הסבר"},
+      {en:"fit",he:"להתאים, מתאים, כשיר"},
+      {en:"garbage",he:"אשפה, זבל"},
+      {en:"gift",he:"מתנה"},
+      {en:"guess",he:"לנחש, ניחוש"},
+      {en:"headache",he:"כאב ראש"},
+      {en:"hear",he:"לשמוע"},
+      {en:"installation",he:"התקנה, התקן"},
+      {en:"involve",he:"לערב"},
+      {en:"join",he:"להצטרף"},
+      {en:"less",he:"פחות"},
+      {en:"more",he:"יותר"},
+      {en:"loud",he:"קולני, רועם"},
+      {en:"loudly",he:"בקול רם"},
+      {en:"molecule",he:"מולקולה"},
+      {en:"narrow",he:"לצמצם, צר"},
+      {en:"option",he:"אפשרות, אופציה"},
+      {en:"proper",he:"הולם, מתאים, תקין"},
+      {en:"properly",he:"כיאות, היטב"},
+      {en:"question",he:"לתשאל, לפקפק, להטיל ספק, שאלה"},
+      {en:"questioned",he:"מוטל בספק, תושאל, תוחקר"},
+      {en:"respond",he:"להגיב"},
+      {en:"response",he:"תגובה"},
+      {en:"correspond",he:"להתכתב, להתאים"},
+      {en:"correspondence",he:"התכתבות, התאמה, הסכמה"},
+      {en:"serious",he:"רציני, חמור"},
+      {en:"tall",he:"גבוה"},
+      {en:"teach",he:"ללמד"},
+      {en:"test",he:"לבחון, מבחן"},
+      {en:"think",he:"לחשוב"},
+      {en:"unit",he:"יחידה"},
+      {en:"value",he:"להוקיר, להעריך, ערך"},
+      {en:"valuable",he:"בעל ערך, יקר ערך, חפץ יקר ערך"},
+      {en:"evaluate",he:"להעריך"},
+    ],
+    8:[
+      {en:"alert",he:"להזהיר, להודיע, אזהרה, התראה, דרוך, מוכן"},
+      {en:"angle",he:"להטות, זווית, פן"},
+      {en:"arrive",he:"להגיע"},
+      {en:"assert",he:"לטעון"},
+      {en:"availability",he:"זמינות"},
+      {en:"begin",he:"להתחיל"},
+      {en:"beginning",he:"התחלה, ראשית"},
+      {en:"bend",he:"לכופף, לעקם, עיקול, סיבוב, לקשת, להתכופף"},
+      {en:"bent",he:"מושחת, עקום, נחוש, החלטי"},
+      {en:"bend over",he:"להתכופף"},
+      {en:"between",he:"בין, במשותף"},
+      {en:"borrow",he:"ללוות, לשאול, להעתיק"},
+      {en:"chapter",he:"פרק, תקופה, סניף"},
+      {en:"circuit",he:"להקיף, מעגל, מעגל חשמלי"},
+      {en:"circular",he:"מעגלי, מחזורי"},
+      {en:"custom",he:"מכס, מנהג"},
+      {en:"exchange",he:"להמיר, להחליף, המרה, החלפה"},
+      {en:"explorer",he:"חוקר, מגלה ארצות"},
+      {en:"exploring",he:"עיסוק בחקר"},
+      {en:"express",he:"לבטא, להביע, להפגין, מהיר, ברור"},
+      {en:"expression",he:"הבעה, ביטוי"},
+      {en:"fast",he:"לצום, צום, מהיר"},
+      {en:"find",he:"למצוא"},
+      {en:"findings",he:"ממצאים"},
+      {en:"forget",he:"לשכוח"},
+      {en:"forgive",he:"לסלוח"},
+      {en:"front",he:"קדמי, פרונטאלי, חזית"},
+      {en:"function",he:"לתפקד, לשמש, תפקוד, פונקציה"},
+      {en:"malfunction",he:"תפקוד לקוי, כשל בתפקוד"},
+      {en:"gap",he:"לרווח, לפתוח פער, רווח, פער"},
+      {en:"hobby",he:"תחביב"},
+      {en:"hold",he:"להחזיק, להכיל, להאמין, אחיזה"},
+      {en:"insert",he:"להחדיר, לשבץ"},
+      {en:"light",he:"להדליק, קל, בהיר, אור"},
+      {en:"lightly",he:"בקלות"},
+      {en:"light bulb",he:"נורה"},
+      {en:"local",he:"מקומי"},
+      {en:"location",he:"מיקום"},
+      {en:"natural",he:"טבעי"},
+      {en:"order",he:"לתת פקודה, לפקוד, להזמין, הזמנה, סדר, מסדר, הוראה, פקודה"},
+      {en:"patient",he:"סבלני, מטופל"},
+      {en:"pipe",he:"צינור, מקטרת"},
+      {en:"pretend",he:"להעמיד פנים"},
+      {en:"produce",he:"לייצר, תוצרת"},
+      {en:"reproduce",he:"להתרבות, לשכפל"},
+      {en:"profession",he:"מקצוע, הצהרה"},
+      {en:"publish",he:"לפרסם"},
+      {en:"public",he:"ציבורי"},
+      {en:"quick",he:"מהיר, זריז, חפוז"},
+      {en:"quickly",he:"בזריזות"},
+      {en:"respect",he:"לכבד, יחס, כבוד"},
+      {en:"restrict",he:"להגביל, לאסור על"},
+      {en:"restriction",he:"מגבלה"},
+      {en:"seem",he:"נראה, נדמה"},
+      {en:"several",he:"כמה, אחדים"},
+      {en:"state",he:"להצהיר, מדינה, מצב"},
+      {en:"tidy",he:"לסדר, מסודר, מאורגן, גדול יחסית"},
+      {en:"trap",he:"ללכוד, מלכודת"},
+      {en:"trust",he:"לבטוח, לקוות, להפקיד, ביטחון, אמון, נאמנות"},
+      {en:"thrust",he:"לדחוף, לנעוץ, דחיפה"},
+      {en:"without",he:"ללא, בלי"},
+      {en:"write",he:"לכתוב"},
+      {en:"writer",he:"כותב, מחבר"},
+    ],
+    9:[
+      {en:"coast",he:"חוף"},
+      {en:"deep",he:"עמוק"},
+      {en:"depth",he:"עומק"},
+      {en:"demand",he:"לדרוש, דרישה"},
+      {en:"design",he:"לעצב, עיצוב"},
+      {en:"display",he:"להציג, תצוגה"},
+      {en:"document",he:"לתעד, תעודה, מסמך"},
+      {en:"door",he:"דלת"},
+      {en:"doorsteps",he:"מפתן, סף"},
+      {en:"draw",he:"לרשום, לצייר, למשוך, ציור, משיכה, תיקו"},
+      {en:"draw upon",he:"להסתמך על"},
+      {en:"drink",he:"לשתות, משקה"},
+      {en:"eat",he:"לאכול"},
+      {en:"edible",he:"אכיל"},
+      {en:"factory",he:"מפעל"},
+      {en:"final",he:"סופי, אחרון"},
+      {en:"finally",he:"לבסוף"},
+      {en:"floor",he:"קומה, רצפה"},
+      {en:"fly",he:"לעוף, לטוס"},
+      {en:"fruit",he:"פרי"},
+      {en:"fruitless",he:"חסר פרי, עקר"},
+      {en:"fuel",he:"לתדלק, דלק"},
+      {en:"job",he:"עבודה"},
+      {en:"knot",he:"לקשור, קשר"},
+      {en:"landscape",he:"נוף"},
+      {en:"lean",he:"להישען, רזה, כחוש"},
+      {en:"load",he:"להטעין, להעמיס, משא, מטען"},
+      {en:"match",he:"להתאים, גפרור, יריב שקול, משחק, תחרות"},
+      {en:"meet",he:"להיפגש"},
+      {en:"meeting",he:"פגישה"},
+      {en:"name",he:"לכנות בשם, שם"},
+      {en:"namely",he:"כלומר"},
+      {en:"neighboring",he:"שכן, מתגורר בשכנות, בסמוך"},
+      {en:"note",he:"פתק, הערה, לציין, להבחין"},
+      {en:"notebook",he:"מחברת"},
+      {en:"pause",he:"להפסיק, הפסקה"},
+      {en:"pet",he:"ללטף, לפנק, חיית מחמד"},
+      {en:"pick",he:"לבחור, לקטוף"},
+      {en:"poet",he:"משורר"},
+      {en:"poem",he:"שיר"},
+      {en:"poetry",he:"שירה"},
+      {en:"practice",he:"לתרגל, להתאמן, אימון, תרגול"},
+      {en:"purchase",he:"לרכוש, רכישה"},
+      {en:"push",he:"לדחוף, דחיפה, תמריץ"},
+      {en:"quite",he:"לחלוטין, למדי"},
+      {en:"race",he:"להתחרות, מרוץ, גזע, מין"},
+      {en:"racial",he:"גזעני"},
+      {en:"racism",he:"גזענות"},
+      {en:"racing",he:"מתחרה"},
+      {en:"rain",he:"גשם"},
+      {en:"raise",he:"להעלות, העלאה"},
+      {en:"rate",he:"להעריך, לדרג, קצב"},
+      {en:"reach",he:"להגיע, להושיט יד"},
+      {en:"rehearsal",he:"חזרה, תרגול"},
+      {en:"round",he:"סיבוב, עיגול, מעגלי"},
+      {en:"say",he:"להגיד, אמרה"},
+      {en:"season",he:"לתבל, עונה"},
+      {en:"service",he:"לשרת, שירות, טקס, דרשה"},
+      {en:"show",he:"להראות, להציג, הצגה"},
+      {en:"sign",he:"לחתום, סימן, שלט"},
+      {en:"signal",he:"לסמן, לאותת, סימן"},
+      {en:"space",he:"לרווח, החלל החיצון, רווח, מרחב, מקום"},
+      {en:"spacecraft",he:"חללית"},
+      {en:"structure",he:"מבנה"},
+      {en:"topic",he:"נושא, תחום"},
+      {en:"voice",he:"להביע, לבטא, קול"},
+      {en:"volunteer",he:"להתנדב, מתנדב"},
+      {en:"weight",he:"משקל"},
+    ],
+    10:[
+      {en:"agency",he:"סוכנות, משרד"},
+      {en:"arrangement",he:"סידור, הסכם"},
+      {en:"blow",he:"לנפח, לנשוב, מהלומה, מכה"},
+      {en:"bone",he:"עצם (בגוף)"},
+      {en:"down",he:"למטה, דכאון, מדוכא"},
+      {en:"dusty",he:"מאובק"},
+      {en:"dwell",he:"להתגורר, לשכון"},
+      {en:"dwelling",he:"בית מגורים, משכן"},
+      {en:"education",he:"חינוך"},
+      {en:"educational",he:"חינוכי"},
+      {en:"effort",he:"מאמץ"},
+      {en:"empty",he:"לרוקן, ריק"},
+      {en:"end",he:"לסיים, סוף"},
+      {en:"environment",he:"סביבה"},
+      {en:"essay",he:"מאמר, חיבור"},
+      {en:"exhibit",he:"להציג, תצוגה, תערוכה, מוצג"},
+      {en:"exhibition",he:"תערוכה"},
+      {en:"fact",he:"עובדה"},
+      {en:"famous",he:"מפורסם"},
+      {en:"infamous",he:"ידוע לשמצה, מגונה"},
+      {en:"glow",he:"לזהור, זוהר"},
+      {en:"invite",he:"להזמין"},
+      {en:"layer",he:"שכבה"},
+      {en:"leave",he:"לעזוב"},
+      {en:"length",he:"אורך"},
+      {en:"open",he:"לפתוח, פתוח"},
+      {en:"people",he:"אנשים, עם"},
+      {en:"perform",he:"להופיע, לבצע"},
+      {en:"performer",he:"מבצע, אומן"},
+      {en:"performance",he:"ביצוע, הופעה"},
+      {en:"personal",he:"אישי"},
+      {en:"personality",he:"אישיות"},
+      {en:"place",he:"למקם, לשים, מקום"},
+      {en:"displacement",he:"העברה, עקירה ממקום או מתפקיד"},
+      {en:"plan",he:"לתכנן, תכנית"},
+      {en:"preparation",he:"הכנה"},
+      {en:"press",he:"ללחוץ, עיתונות"},
+      {en:"promise",he:"להבטיח, הבטחה"},
+      {en:"property",he:"רכוש, מאפיין, תכונה"},
+      {en:"retire",he:"לפרוש"},
+      {en:"retirement",he:"פרישה"},
+      {en:"select",he:"לבחור"},
+      {en:"share",he:"לחלוק, לשתף, מנייה, חלק"},
+      {en:"shy",he:"ביישן"},
+      {en:"skill",he:"מיומנות"},
+      {en:"skin",he:"עור"},
+      {en:"sky",he:"שמיים"},
+      {en:"spend",he:"להעביר (זמן), לבזבז"},
+      {en:"staff",he:"צוות, סגל, מטה"},
+      {en:"station",he:"להציב, למקם, תחנה"},
+      {en:"supply",he:"לספק, אספקה"},
+      {en:"surrender",he:"להיכנע"},
+      {en:"survive",he:"לשרוד"},
+      {en:"system",he:"שיטה, מערכת"},
+      {en:"systematic",he:"מערכתי, שיטתי"},
+      {en:"team",he:"לצוות לקבוצה, צוות"},
+      {en:"train",he:"לאמן, רכבת"},
+      {en:"training",he:"אימון, תרגול, כושר, מיומנות"},
+      {en:"translate",he:"לתרגם"},
+      {en:"translation",he:"תרגום"},
+      {en:"vacation",he:"חופשה"},
+      {en:"vote",he:"להצביע, הצבעה"},
+      {en:"wave",he:"לנפנף, נפנוף, גל"},
+      {en:"wind",he:"לעקל, ללפף, רוח"},
+      {en:"windmill",he:"טחנת רוח"},
+      {en:"wine",he:"יין"},
+      {en:"wood",he:"יער, עץ"},
+      {en:"work",he:"לעבוד, עבודה"},
+    ]
+  },
+  medium:{1:[],2:[],3:[],4:[],5:[],6:[],7:[],8:[],9:[],10:[]},
+  hard:{1:[],2:[],3:[],4:[],5:[],6:[],7:[],8:[],9:[],10:[]}
+};
+
+// מילים שלא ידועות ביחידה 1 קלה לפי הנתונים שהתקבלו
+const INITIAL_UNKNOWN = new Set([
+  "easy_1_decrease","easy_1_deem","easy_1_disastrous","easy_1_entire",
+  "easy_1_never","easy_1_object","easy_1_primarily"
+]);
+
+const LEVELS={easy:'קלה',medium:'בינונית',hard:'קשה'};
+let currentUnit=1, currentLevel='easy';
+let queue=[], queueIdx=0, knownCount=0, unknownCount=0;
+
+function wordKey(lvl,unit,en){ return lvl+'_'+unit+'_'+en; }
+
+function init(){
+  buildModals();
+  startUnit();
+}
+
+function buildModals(){
+  const ul=document.getElementById('unitList');
+  ul.innerHTML='';
+  for(let i=1;i<=10;i++){
+    const hasWords=(WORDS[currentLevel]&&WORDS[currentLevel][i]&&WORDS[currentLevel][i].length>0);
+    const li=document.createElement('li');
+    li.className='sheet-item'+(i===currentUnit?' selected':'');
+    li.dataset.unit=i;
+    const countLabel=hasWords?` (${WORDS[currentLevel][i].length})`:'';
+    li.innerHTML=`<div class="sheet-item-label"><span class="sheet-item-he">יחידה : </span><span class="sheet-item-en">Unit ${i}${countLabel}</span></div><span class="check-icon">✓</span>`;
+    li.onclick=()=>selectUnit(i);
+    ul.appendChild(li);
+  }
+  const ll=document.getElementById('levelList');
+  ll.innerHTML='';
+  Object.entries(LEVELS).forEach(([key,label])=>{
+    const li=document.createElement('li');
+    li.className='sheet-item'+(key===currentLevel?' selected':'');
+    li.dataset.level=key;
+    li.innerHTML=`<div class="sheet-item-label"><span class="sheet-item-he">רמה : </span><span class="sheet-item-en">${label}</span></div><span class="check-icon">✓</span>`;
+    li.onclick=()=>selectLevel(key);
+    ll.appendChild(li);
+  });
+}
+
+function selectUnit(n){
+  currentUnit=n;
+  document.getElementById('unitBtnText').textContent=`יחידה : Unit ${n}`;
+  document.querySelectorAll('#unitList .sheet-item').forEach(el=>{
+    el.classList.toggle('selected',parseInt(el.dataset.unit)===n);
+  });
+  closeModal('unitModal');
+  setTimeout(()=>startUnit(),250);
+}
+
+function selectLevel(key){
+  currentLevel=key;
+  document.getElementById('levelBtnText').textContent=`רמה : ${LEVELS[key]}`;
+  document.querySelectorAll('#levelList .sheet-item').forEach(el=>{
+    el.classList.toggle('selected',el.dataset.level===key);
+  });
+  closeModal('levelModal');
+  setTimeout(()=>{buildModals();startUnit();},250);
+}
+
+function startUnit(){
+  const words=(WORDS[currentLevel]&&WORDS[currentLevel][currentUnit])||[];
+  if(words.length===0){
+    document.getElementById('quizBody').innerHTML=`
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:16px;padding:40px 24px;text-align:center;">
+        <div style="font-size:48px">📭</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text-main)">יחידה זו עדיין ריקה</div>
+        <div style="font-size:14px;color:var(--text-muted)">שלח את המילים ונכניס אותן!</div>
+      </div>`;
+    document.getElementById('unknownNum').textContent=0;
+    document.getElementById('knownNum').textContent=0;
+    document.getElementById('remainingNum').textContent=0;
+    return;
+  }
+  queue=shuffle([...words]);
+  queueIdx=0;knownCount=0;unknownCount=0;
+  updateScores();
+  showCard();
+}
+
+function updateScores(){
+  document.getElementById('unknownNum').textContent=unknownCount;
+  document.getElementById('knownNum').textContent=knownCount;
+  document.getElementById('remainingNum').textContent=Math.max(0,queue.length-queueIdx);
+}
+
+function showCard(){
+  if(queueIdx>=queue.length){showCompletion();return;}
+  const w=queue[queueIdx];
+  const body=document.getElementById('quizBody');
+  body.innerHTML=`
+    <div class="word-card-wrap">
+      <div class="word-display enter" id="wordDisplay" onclick="revealWord()">
+        <div class="word-en">${w.en}</div>
+        <div class="word-he">${w.he}</div>
+        <div class="tap-hint">הקש לגלות תרגום 👆</div>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="action-btn btn-unknown" onclick="answer(false)">
+        <span class="btn-icon">👎</span> לא יודע
+      </button>
+      <button class="action-btn btn-known" onclick="answer(true)">
+        ידעתי! <span class="btn-icon">👍</span>
+      </button>
+    </div>
+  `;
+}
+
+function revealWord(){
+  const d=document.getElementById('wordDisplay');
+  if(d&&!d.classList.contains('revealed')) d.classList.add('revealed');
+}
+
+function answer(knew){
+  revealWord();
+  if(knew) knownCount++; else unknownCount++;
+  const card=document.getElementById('wordDisplay');
+  if(card){
+    card.classList.add(knew?'exit-right':'exit-left');
+    setTimeout(()=>{queueIdx++;updateScores();showCard();},200);
+  } else {queueIdx++;updateScores();showCard();}
+}
+
+function showCompletion(){
+  const total=queue.length;
+  const pct=total>0?Math.round((knownCount/total)*100):0;
+  const emoji=pct>=80?'🎉':pct>=50?'💪':'📚';
+  document.getElementById('quizBody').innerHTML=`
+    <div class="completion">
+      <div class="confetti-emoji">${emoji}</div>
+      <div class="comp-title">כל הכבוד!</div>
+      <div class="comp-sub">סיימת את המיון של כל המילים ביחידה<br>${knownCount} ידועות · ${unknownCount} ללמוד</div>
+      <div class="comp-btns">
+        <button class="comp-btn-primary" onclick="startUnit()">אני רוצה לשנן את המילים שמיינתי</button>
+        <button class="comp-btn-secondary" onclick="nextUnit()">אני רוצה לעבור למיון היחידה הבאה</button>
+      </div>
+    </div>`;
+}
+
+function nextUnit(){
+  const next=currentUnit<10?currentUnit+1:1;
+  selectUnit(next);
+}
+
+function openModal(type){document.getElementById(type+'Modal').classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModalOutside(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+init();
+</script>
+</body>
+</html>
