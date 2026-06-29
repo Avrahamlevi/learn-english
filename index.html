@@ -108,7 +108,7 @@ body{
       <button class="close-btn" onclick="startUnit()">✕</button>
     </div>
     <div class="score-row">
-      <div class="score-col">
+      <div class="score-col" onclick="showWordList(false)" style="cursor:pointer">
         <div class="score-icon">👎</div>
         <div class="score-num" id="unknownNum">0</div>
       </div>
@@ -116,7 +116,7 @@ body{
         <div class="score-label">למיון</div>
         <div class="score-num" id="remainingNum">0</div>
       </div>
-      <div class="score-col">
+      <div class="score-col" onclick="showWordList(true)" style="cursor:pointer">
         <div class="score-icon">👍</div>
         <div class="score-num" id="knownNum">0</div>
       </div>
@@ -149,6 +149,72 @@ body{
     <div class="sheet-header"><button class="sheet-close" onclick="closeModal('levelModal')">✕</button></div>
     <div class="sheet-title">בחירת רמה</div>
     <ul class="sheet-list" id="levelList"></ul>
+  </div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div class="modal-overlay" id="wordListModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div style="background:white;border-radius:24px 24px 0 0;width:100%;max-width:430px;
+              padding:0 0 40px;animation:slideSheet 0.3s ease;min-height:60vh;
+              display:flex;flex-direction:column;">
+
+    <!-- header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px">
+      <button onclick="document.getElementById('wordListModal').classList.remove('open')"
+              style="width:32px;height:32px;border:none;background:var(--gray-bg);
+                     border-radius:50%;font-size:16px;cursor:pointer;color:var(--text-muted);
+                     display:flex;align-items:center;justify-content:center">✕</button>
+      <div id="reviewTitle" style="font-size:16px;font-weight:700;color:var(--text-main)"></div>
+      <div id="reviewCounter" style="font-size:13px;color:var(--text-muted);font-weight:600"></div>
+    </div>
+
+    <!-- card area -->
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;
+                justify-content:center;padding:16px 24px 8px">
+
+      <div id="reviewCard"
+           onclick="toggleReviewCard()"
+           style="width:100%;background:var(--gray-bg);border-radius:20px;
+                  padding:36px 24px;text-align:center;cursor:pointer;
+                  min-height:180px;display:flex;flex-direction:column;
+                  align-items:center;justify-content:center;gap:10px">
+        <div id="reviewWordEn" style="font-family:Poppins,sans-serif;font-size:30px;
+                                       font-weight:800;color:var(--text-main)"></div>
+        <div id="reviewWordHe" style="font-size:18px;font-weight:700;
+                                       color:var(--text-main);display:none"></div>
+        <div id="reviewHint" style="font-size:12px;color:var(--text-muted);margin-top:4px">
+          הקש לגלות תרגום 👆
+        </div>
+        <div id="reviewHideHint" style="font-size:12px;color:var(--text-muted);
+                                         margin-top:4px;display:none">
+          הקש להסתיר 👆
+        </div>
+      </div>
+
+    </div>
+
+    <!-- progress bar -->
+    <div style="height:4px;background:var(--gray-bg);margin:8px 24px">
+      <div id="reviewProgress" style="height:100%;background:var(--red);
+                                       border-radius:2px;transition:width 0.3s"></div>
+    </div>
+
+    <!-- nav buttons -->
+    <div style="display:flex;gap:12px;padding:12px 24px 0">
+      <button onclick="reviewNav(-1)"
+              style="flex:1;padding:14px;border:2px solid var(--gray-border);
+                     background:white;border-radius:12px;font-family:Heebo,sans-serif;
+                     font-size:15px;font-weight:700;cursor:pointer;color:var(--text-main)">
+        ◀ הקודם
+      </button>
+      <button onclick="reviewNav(1)"
+              style="flex:1;padding:14px;border:none;background:var(--red);
+                     border-radius:12px;font-family:Heebo,sans-serif;font-size:15px;
+                     font-weight:700;cursor:pointer;color:white">
+        הבא ▶
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -2749,6 +2815,8 @@ const INITIAL_UNKNOWN = new Set([
 const LEVELS={easy:'קלה',medium:'בינונית',hard:'קשה'};
 let currentUnit=1, currentLevel='easy';
 let queue=[], queueIdx=0, knownCount=0, unknownCount=0;
+let knownWords=[], unknownWords=[];
+let answerLocked=false;
 
 function wordKey(lvl,unit,en){ return lvl+'_'+unit+'_'+en; }
 
@@ -2817,7 +2885,7 @@ function startUnit(){
     return;
   }
   queue=shuffle([...words]);
-  queueIdx=0;knownCount=0;unknownCount=0;knownWords=[];unknownWords=[];
+  queueIdx=0;knownCount=0;unknownCount=0;knownWords=[];unknownWords=[];answerLocked=false;
   updateScores();
   showCard();
 }
@@ -2829,7 +2897,6 @@ function updateScores(){
 }
 
 // שמירת רשימות ידועות/לא ידועות
-let knownWords=[], unknownWords=[];
 
 function showCard(){
   if(queueIdx>=queue.length){showCompletion();return;}
@@ -2871,6 +2938,8 @@ function toggleReveal(){
 }
 
 function answer(knew){
+  if(answerLocked) return;
+  answerLocked = true;
   const d=document.getElementById('wordDisplay');
   if(d && !d.classList.contains('revealed')) d.classList.add('revealed');
   const w=queue[queueIdx];
@@ -2879,8 +2948,16 @@ function answer(knew){
   const card=document.getElementById('wordDisplay');
   if(card){
     card.classList.add(knew?'exit-right':'exit-left');
-    setTimeout(()=>{queueIdx++;updateScores();showCard();},200);
-  } else {queueIdx++;updateScores();showCard();}
+    setTimeout(()=>{
+      queueIdx++;
+      updateScores();
+      showCard();
+      answerLocked = false;
+    },200);
+  } else {
+    queueIdx++;updateScores();showCard();
+    answerLocked = false;
+  }
 }
 
 function showCompletion(){
@@ -2942,8 +3019,61 @@ function nextUnit(){
   selectUnit(next);
 }
 
-function openModal(type){document.getElementById(type+'Modal').classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+let reviewWords=[], reviewIdx=0;
+
+function showWordList(isKnown){
+  const words = isKnown ? knownWords : unknownWords;
+  if(words.length===0){
+    alert(isKnown ? 'עדיין לא סימנת מילים ידועות' : 'עדיין לא סימנת מילים ללמוד');
+    return;
+  }
+  reviewWords = words;
+  reviewIdx = 0;
+  const title = isKnown ? '✅ מילים ידועות' : '❌ מילים ללמוד';
+  document.getElementById('reviewTitle').textContent = title;
+  document.getElementById('reviewTitle').style.color = isKnown ? '#1a7a44' : '#C0392B';
+  showReviewCard();
+  document.getElementById('wordListModal').classList.add('open');
+}
+
+function showReviewCard(){
+  const w = reviewWords[reviewIdx];
+  const total = reviewWords.length;
+  const pct = ((reviewIdx+1)/total*100).toFixed(0);
+
+  document.getElementById('reviewWordEn').textContent = w.en;
+  document.getElementById('reviewWordHe').textContent = w.he;
+  document.getElementById('reviewWordHe').style.display = 'none';
+  document.getElementById('reviewHint').style.display = '';
+  document.getElementById('reviewHideHint').style.display = 'none';
+  document.getElementById('reviewCounter').textContent = `${reviewIdx+1} / ${total}`;
+  document.getElementById('reviewProgress').style.width = pct+'%';
+}
+
+function toggleReviewCard(){
+  const he = document.getElementById('reviewWordHe');
+  const hint = document.getElementById('reviewHint');
+  const hideHint = document.getElementById('reviewHideHint');
+  const isHidden = he.style.display === 'none';
+  he.style.display = isHidden ? '' : 'none';
+  hint.style.display = isHidden ? 'none' : '';
+  hideHint.style.display = isHidden ? '' : 'none';
+}
+
+function reviewNav(dir){
+  reviewIdx = Math.max(0, Math.min(reviewWords.length-1, reviewIdx+dir));
+  showReviewCard();
+}
+
+function openModal(type){
+  const id = type.endsWith('Modal') ? type : type+'Modal';
+  const el = document.getElementById(id);
+  if(el) el.classList.add('open');
+}
+function closeModal(id){
+  const el = document.getElementById(id);
+  if(el) el.classList.remove('open');
+}
 function closeModalOutside(e,id){if(e.target===document.getElementById(id))closeModal(id);}
 
 function shuffle(arr){
