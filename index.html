@@ -2817,7 +2817,7 @@ function startUnit(){
     return;
   }
   queue=shuffle([...words]);
-  queueIdx=0;knownCount=0;unknownCount=0;
+  queueIdx=0;knownCount=0;unknownCount=0;knownWords=[];unknownWords=[];
   updateScores();
   showCard();
 }
@@ -2828,16 +2828,20 @@ function updateScores(){
   document.getElementById('remainingNum').textContent=Math.max(0,queue.length-queueIdx);
 }
 
+// שמירת רשימות ידועות/לא ידועות
+let knownWords=[], unknownWords=[];
+
 function showCard(){
   if(queueIdx>=queue.length){showCompletion();return;}
   const w=queue[queueIdx];
   const body=document.getElementById('quizBody');
   body.innerHTML=`
     <div class="word-card-wrap">
-      <div class="word-display enter" id="wordDisplay" onclick="revealWord()">
+      <div class="word-display enter" id="wordDisplay" onclick="toggleReveal()">
         <div class="word-en">${w.en}</div>
         <div class="word-he">${w.he}</div>
         <div class="tap-hint">הקש לגלות תרגום 👆</div>
+        <div class="tap-hint-hide" style="display:none;font-size:12px;color:var(--text-muted);margin-top:4px">הקש להסתיר 👆</div>
       </div>
     </div>
     <div class="action-row">
@@ -2851,14 +2855,27 @@ function showCard(){
   `;
 }
 
-function revealWord(){
+function toggleReveal(){
   const d=document.getElementById('wordDisplay');
-  if(d&&!d.classList.contains('revealed')) d.classList.add('revealed');
+  if(!d) return;
+  const isRevealed=d.classList.contains('revealed');
+  if(isRevealed){
+    d.classList.remove('revealed');
+    d.querySelector('.tap-hint').style.display='';
+    d.querySelector('.tap-hint-hide').style.display='none';
+  } else {
+    d.classList.add('revealed');
+    d.querySelector('.tap-hint').style.display='none';
+    d.querySelector('.tap-hint-hide').style.display='';
+  }
 }
 
 function answer(knew){
-  revealWord();
-  if(knew) knownCount++; else unknownCount++;
+  const d=document.getElementById('wordDisplay');
+  if(d && !d.classList.contains('revealed')) d.classList.add('revealed');
+  const w=queue[queueIdx];
+  if(knew){ knownCount++; knownWords.push(w); }
+  else { unknownCount++; unknownWords.push(w); }
   const card=document.getElementById('wordDisplay');
   if(card){
     card.classList.add(knew?'exit-right':'exit-left');
@@ -2870,14 +2887,52 @@ function showCompletion(){
   const total=queue.length;
   const pct=total>0?Math.round((knownCount/total)*100):0;
   const emoji=pct>=80?'🎉':pct>=50?'💪':'📚';
+
+  const buildList=(words, isKnown)=>{
+    if(words.length===0) return `<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px 0">אין מילים</div>`;
+    return words.map(w=>`
+      <div style="background:${isKnown?'#E8F8F0':'#FDECEA'};border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="font-family:Poppins,sans-serif;font-weight:700;font-size:14px;direction:ltr;color:var(--text-main)">${w.en}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${w.he}</div>
+      </div>`).join('');
+  };
+
   document.getElementById('quizBody').innerHTML=`
-    <div class="completion">
-      <div class="confetti-emoji">${emoji}</div>
-      <div class="comp-title">כל הכבוד!</div>
-      <div class="comp-sub">סיימת את המיון של כל המילים ביחידה<br>${knownCount} ידועות · ${unknownCount} ללמוד</div>
-      <div class="comp-btns">
-        <button class="comp-btn-primary" onclick="startUnit()">אני רוצה לשנן את המילים שמיינתי</button>
-        <button class="comp-btn-secondary" onclick="nextUnit()">אני רוצה לעבור למיון היחידה הבאה</button>
+    <div style="width:100%;display:flex;flex-direction:column;gap:12px;padding-bottom:16px">
+
+      <div style="text-align:center;padding:12px 0 4px">
+        <div style="font-size:32px">${emoji}</div>
+        <div style="font-size:18px;font-weight:800;color:var(--text-main);margin-top:4px">כל הכבוד!</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:2px">${knownCount} ידועות · ${unknownCount} ללמוד</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+        <div style="background:white;border-radius:14px;overflow:hidden;border:1.5px solid #b7e8cc">
+          <div style="background:#E8F8F0;padding:10px;text-align:center;border-bottom:1.5px solid #b7e8cc">
+            <div style="font-size:13px;font-weight:700;color:#1a7a44">🟢 ידועות</div>
+            <div style="font-family:Poppins,sans-serif;font-size:20px;font-weight:800;color:#1a7a44">${knownCount}</div>
+          </div>
+          <div style="padding:10px;max-height:340px;overflow-y:auto">
+            ${buildList(knownWords, true)}
+          </div>
+        </div>
+
+        <div style="background:white;border-radius:14px;overflow:hidden;border:1.5px solid #fcd5d5">
+          <div style="background:#FDECEA;padding:10px;text-align:center;border-bottom:1.5px solid #fcd5d5">
+            <div style="font-size:13px;font-weight:700;color:#C0392B">🔴 ללמוד</div>
+            <div style="font-family:Poppins,sans-serif;font-size:20px;font-weight:800;color:#C0392B">${unknownCount}</div>
+          </div>
+          <div style="padding:10px;max-height:340px;overflow-y:auto">
+            ${buildList(unknownWords, false)}
+          </div>
+        </div>
+
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+        <button class="comp-btn-primary" onclick="startUnit()">🔄 מיין שוב</button>
+        <button class="comp-btn-secondary" onclick="nextUnit()">▶ יחידה הבאה</button>
       </div>
     </div>`;
 }
